@@ -269,7 +269,7 @@ const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: 'ouissal.hadji123@gmail.com',
-        pass: 'uwskmnpgfnabhfml'
+        pass: process.env.GMAIL_PASS || 'uwskmnpgfnabhfml'
     }
 });
 

@@ -266,10 +266,15 @@ app.delete('/api/admins/:id', (req, res) => {
 
 // --- CONTACT / EMAIL ---
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // Use STARTTLS
     auth: {
         user: 'ouissal.hadji123@gmail.com',
         pass: process.env.GMAIL_PASS || 'uwskmnpgfnabhfml'
+    },
+    tls: {
+        rejectUnauthorized: false
     }
 });
 
@@ -306,15 +311,19 @@ app.post('/api/contact', async (req, res) => {
 
         let errorMessage = 'Failed to send email.';
         if (error.code === 'EAUTH') {
-            errorMessage = 'Authentication Failed: You likely need a Google App Password.';
-            console.error('>>> ACTION REQUIRED: Go to Google Account Settings -> Security -> App Passwords.');
+            errorMessage = 'Authentication Failed: Your Google App Password might be incorrect or expired.';
+        } else if (error.code === 'ESOCKET' || error.syscall === 'connect') {
+            errorMessage = 'Connection Failed: The server cannot reach Gmail. This might be a temporary network issue on Render.';
         }
 
         res.status(500).json({
             success: false,
             message: errorMessage,
-            code: error.code,
-            command: error.command
+            technical: {
+                code: error.code,
+                command: error.command,
+                responseCode: error.responseCode
+            }
         });
     }
 });

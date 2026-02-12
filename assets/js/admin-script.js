@@ -336,27 +336,25 @@ function initDashboard() {
             const text = document.getElementById('status-text');
             if (!dot || !text) return;
 
+            const isMirror = window.location.hostname.includes('github.io');
             const healthUrl = `${CONFIG.api}/health?t=${Date.now()}`;
-            console.log(`[Status] Checking: ${healthUrl}`);
 
             try {
                 const res = await fetch(healthUrl, { cache: 'no-cache' });
                 if (res.ok) {
-                    const data = await res.json();
-                    console.log("[Status] Server OK:", data);
                     dot.style.background = '#0D9488'; // Teal
-                    text.textContent = 'Server Connected';
+                    text.textContent = 'Live System Connected';
                     text.style.color = '#0D9488';
                 } else {
-                    console.warn(`[Status] Server Error: HTTP ${res.status}`);
-                    dot.style.background = '#f59e0b'; // Amber
-                    text.textContent = `Server Error (${res.status})`;
-                    text.style.color = '#f59e0b';
+                    throw new Error("HTTP " + res.status);
                 }
             } catch (e) {
-                console.error("[Status] Server Offline:", e.message);
                 dot.style.background = '#ef4444'; // Red
-                text.textContent = 'Server Offline (Check Terminal)';
+                if (isMirror) {
+                    text.textContent = 'MIRROR ONLY (Use Render Link)';
+                } else {
+                    text.textContent = 'Server Disconnected';
+                }
                 text.style.color = '#ef4444';
             }
         }
@@ -416,23 +414,45 @@ function initDashboard() {
                 }
 
                 try {
+                    // Show processing state
+                    const btn = upForm.querySelector('button[type="submit"]');
+                    const text = btn.querySelector('.btn-text');
+                    const loader = btn.querySelector('.btn-loader');
+                    if (text && loader) { text.style.display = 'none'; loader.style.display = 'block'; }
+                    btn.disabled = true;
+
+                    // Check file size (5MB Limit)
+                    if (tempBeforeFile.size > 5 * 1024 * 1024 || tempAfterFile.size > 5 * 1024 * 1024) {
+                        throw new Error("Files are too large. Max size is 5MB per image.");
+                    }
+
                     const beforeUrl = await uploadFile(tempBeforeFile);
                     const afterUrl = await uploadFile(tempAfterFile);
 
                     const title = document.getElementById('img-title').value;
                     const desc = document.getElementById('img-desc').value;
 
-                    await fetch(`${CONFIG.api}/gallery`, {
+                    const res = await fetch(`${CONFIG.api}/gallery`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ beforeSrc: beforeUrl, afterSrc: afterUrl, title, desc })
                     });
 
+                    if (!res.ok) throw new Error("Server failed to save the transformation.");
+
+                    alert("🎉 Transformation added successfully!");
                     window.closeModal('upload-modal');
                     renderGallery();
                     updateStats();
                 } catch (err) {
-                    alert("Upload Failed: " + err.message);
+                    console.error("Upload Failed:", err);
+                    alert("⚠️ Error: " + err.message);
+                } finally {
+                    const btn = upForm.querySelector('button[type="submit"]');
+                    const text = btn.querySelector('.btn-text');
+                    const loader = btn.querySelector('.btn-loader');
+                    if (text && loader) { text.style.display = 'block'; loader.style.display = 'none'; }
+                    btn.disabled = false;
                 }
             };
 

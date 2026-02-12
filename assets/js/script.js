@@ -210,14 +210,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 .catch(error => {
                     console.error('API Error:', error);
 
-                    let message = 'Failed to connect to server. ';
-                    if (error.message.includes('Failed to fetch')) {
-                        message += '<br>Is the black window running?<br>Try refreshing the page.';
+                    let displayMsg = '';
+                    if (error instanceof TypeError) {
+                        displayMsg = '<i class="fas fa-exclamation-circle"></i> Failed to connect to server. Is your internet okay?';
                     } else {
-                        message += error.message;
+                        displayMsg = `<i class="fas fa-exclamation-circle"></i> ${error.message}`;
                     }
 
-                    statusDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+                    statusDiv.innerHTML = displayMsg;
                     statusDiv.className = 'form-status status-error';
                     statusDiv.style.display = 'block';
                 })
@@ -228,4 +228,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
         });
     }
+    // --- Environment Check & Diagnostic ---
+    const isGitHub = window.location.hostname.includes('github.io');
+    if (isGitHub) {
+        console.warn("⚠️ You are on the GitHub Mirror. Contact Form & Admin are LIMITED. Use the Render URL for full features.");
+    }
+
+    // Quick Health Check on Load
+    fetch(`${API_BASE}/health`)
+        .then(r => r.json())
+        .catch(() => {
+            if (!isGitHub) return;
+            const contactHeader = document.querySelector('#contact h2');
+            if (contactHeader) {
+                contactHeader.innerHTML += '<br><small style="color:var(--accent); font-size:0.5em;">⚠️ Use Render.com URL for live form</small>';
+            }
+        });
 });

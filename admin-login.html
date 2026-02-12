@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | BodyCraft</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/admin-style.css">
+    <style>
+        body.login-page {
+            background-color: var(--bg-body);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(45, 212, 191, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(20, 184, 166, 0.1) 0px, transparent 50%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+        }
+
+        .login-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(30px) saturate(160%);
+            -webkit-backdrop-filter: blur(30px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: var(--shadow-float);
+            border-radius: var(--radius-lg);
+            padding: 60px;
+            width: 90%;
+            max-width: 480px;
+            text-align: center;
+        }
+
+        .brand-logo {
+            color: var(--text-main);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            letter-spacing: -1.5px;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .brand-logo span {
+            color: var(--primary);
+            background: var(--primary-soft);
+            padding: 0 8px;
+            border-radius: 8px;
+            margin-left: 4px;
+        }
+    </style>
+</head>
+
+<body class="login-page">
+
+    <div class="login-card">
+        <div class="login-header" style="position: relative;">
+            <button id="admin-theme-toggle" onclick="window.toggleTheme()"
+                style="position: absolute; top: -20px; right: -20px; background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1.2rem;">
+                <i class="fas fa-moon"></i>
+            </button>
+            <h1 class="brand-logo">BODY<span>CRAFT</span></h1>
+            <p>Secure Admin Portal</p>
+        </div>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" class="form-control" placeholder="admin@elitetransform.com" required>
+                <div class="error-msg" id="email-error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+                    <button type="button" class="toggle-password" id="toggle-password">👁️</button>
+                </div>
+                <div class="error-msg" id="password-error"></div>
+            </div>
+
+            <div class="form-actions">
+                <label class="remember-me">
+                    <input type="checkbox" id="remember">
+                    <span>Remember me</span>
+                </label>
+                <a href="#" class="forgot-pass"
+                    onclick="alert('Please contact the system administrator to reset credentials.')">Forgot
+                    Password?</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg" id="login-btn">
+                <span class="btn-text">Login to Dashboard</span>
+                <span class="btn-loader" style="display:none;">Processing...</span>
+            </button>
+            <div id="general-error" class="error-banner"></div>
+        </form>
+
+        <div class="login-footer">
+            <p>Protected by Elite Security Systems v1.0</p>
+        </div>
+    </div>
+
+    <script src="assets/js/admin-script.js?v=5.8"></script>
+</body>
+
+</html>

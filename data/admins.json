@@ -1,0 +1,37 @@
+[
+  {
+    "id": "1",
+    "name": "Super Admin",
+    "email": "admin@elitetransform.com",
+    "password": "Admin@2024",
+    "role": "owner"
+  },
+  {
+    "id": "1770677391021",
+    "name": "wissal hadji",
+    "email": "ouissalhadji12@gmail.com",
+    "password": "Wissal2005..",
+    "role": "admin"
+  },
+  {
+    "id": "1770677764656",
+    "name": "boudour hanine",
+    "email": "hello@gmail.com",
+    "password": "H1234",
+    "role": "admin"
+  },
+  {
+    "id": "1770756556124",
+    "name": "Madi chaima",
+    "email": "chaima@gmail.com",
+    "password": "C1234",
+    "role": "admin"
+  },
+  {
+    "id": "1770760473839",
+    "name": "adoui naima",
+    "email": "adoui@hotmail.fr",
+    "password": "A1234",
+    "role": "owner"
+  }
+]

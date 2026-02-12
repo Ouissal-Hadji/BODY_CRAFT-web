@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | BodyCraft</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/admin-style.css">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="sidebar-brand">BODY<span>CRAFT</span></a>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="#" class="menu-item active" data-target="overview" onclick="window.navToSection('overview')">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="#" class="menu-item" data-target="gallery" onclick="window.navToSection('gallery')">
+                    <i class="fas fa-images"></i> Gallery Manager
+                </a>
+                <a href="#" class="menu-item" data-target="achievements" onclick="window.navToSection('achievements')">
+                    <i class="fas fa-trophy"></i> Achievements
+                </a>
+                <a href="#" class="menu-item" data-target="clients" onclick="window.navToSection('clients')">
+                    <i class="fas fa-address-book"></i> Clients Settings
+                </a>
+                <a href="#" class="menu-item" data-target="community" onclick="window.navToSection('community')">
+                    <i class="fas fa-users"></i> Community
+                </a>
+                <a href="#" class="menu-item" data-target="admins" onclick="window.navToSection('admins')">
+                    <i class="fas fa-user-shield"></i> Admin Settings
+                </a>
+            </nav>
+            <div class="user-profile">
+                <div class="user-avatar" id="current-user-avatar">A</div>
+                <div class="user-info">
+                    <div style="font-weight: 600;" id="current-user-name">Admin User</div>
+                    <div style="font-size: 0.8rem; opacity: 0.7;" id="current-user-role">Super Admin</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <button class="btn btn-secondary menu-toggle" id="menu-toggle" style="display: none;">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="breadcrumb">
+                    <span style="color: var(--text-secondary);">Portal</span> / <span id="current-page-title"
+                        style="font-weight: 600;">Dashboard</span>
+                </div>
+                <div class="top-actions" style="display: flex; align-items: center; gap: 15px;">
+                    <!-- NEW: Status Indicator -->
+                    <div id="conn-status"
+                        style="display:flex; align-items:center; gap:8px; margin-right:10px; font-size:0.8rem; background: rgba(0,0,0,0.05); padding: 5px 12px; border-radius: 20px;">
+                        <span id="status-dot"
+                            style="width:8px; height:8px; border-radius:50%; background:#94a3b8;"></span>
+                        <span id="status-text" style="font-weight: 600; color: var(--text-secondary);">Testing...</span>
+                    </div>
+
+                    <!-- Theme Toggle -->
+                    <button class="btn btn-secondary btn-sm" id="admin-theme-toggle" onclick="window.toggleTheme()"
+                        title="Toggle Dark Mode">
+                        <i class="fas fa-moon"></i>
+                    </button>
+
+                    <button class="btn btn-sm btn-danger" id="logout-btn" onclick="window.logout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </header>
+
+            <div class="page-content">
+
+                <!-- SECTION: OVERVIEW -->
+                <section id="overview" class="dashboard-section active">
+                    <div class="section-header" style="margin-bottom: 30px;">
+                        <h2 id="welcome-message">Welcome Back.</h2>
+                        <p style="color: var(--text-secondary);">Here's what's happening with your content today.</p>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-image"></i></div>
+                            <div class="stat-info">
+                                <h3 id="stat-gallery-count">0</h3>
+                                <p>Gallery Images</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-award"></i></div>
+                            <div class="stat-info">
+                                <h3 id="stat-achievements-count">0</h3>
+                                <p>Achievements</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-user-friends"></i></div>
+                            <div class="stat-info">
+                                <h3 id="stat-members-count">0</h3>
+                                <p>Community Members</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(40, 167, 69, 0.1); color: var(--success);"><i
+                                    class="fas fa-check-circle"></i></div>
+                            <div class="stat-info">
+                                <h3>Online</h3>
+                                <p>Server Status</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION: GALLERY -->
+                <section id="gallery" class="dashboard-section">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <h2>Gallery Manager</h2>
+                        <button class="btn btn-primary" onclick="window.openModal('upload-modal')"><i
+                                class="fas fa-cloud-upload-alt"></i>
+                            Upload New</button>
+                    </div>
+
+                    <div class="gallery-grid" id="gallery-container">
+                        <!-- Items injected via JS -->
+                    </div>
+                    <div id="gallery-empty" class="text-center"
+                        style="display: none; padding: 50px; color: var(--text-muted);">
+                        <i class="fas fa-images" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                        <p>No images found. Upload some to get started!</p>
+                    </div>
+                </section>
+
+                <!-- SECTION: ACHIEVEMENTS -->
+                <section id="achievements" class="dashboard-section">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <h2>Experience & Achievements</h2>
+                        <button class="btn btn-primary" onclick="window.openModal('achievement-modal')"><i
+                                class="fas fa-plus"></i> Add Achievement</button>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Year</th>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="achievements-table-body">
+                                <!-- Rows injected via JS -->
+                            </tbody>
+                        </table>
+                        <div id="achievements-empty" style="padding: 30px; text-align: center; display: none;">No
+                            achievements added yet.</div>
+                    </div>
+                </section>
+
+                <!-- SECTION: COMMUNITY -->
+                <section id="community" class="dashboard-section">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <h2>Community Members</h2>
+                        <button class="btn btn-primary" onclick="window.openModal('member-modal')"><i
+                                class="fas fa-plus"></i>
+                            Add Member</button>
+                    </div>
+
+                    <div class="stats-grid" id="members-grid"
+                        style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
+                        <!-- Member cards injected via JS -->
+                    </div>
+                    <div id="members-empty" style="text-align: center; padding: 40px; display: none;">No community
+                        members added.</div>
+                </section>
+
+                <!-- SECTION: CLIENTS (New) -->
+                <section id="clients" class="dashboard-section">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <h2>Clients Settings</h2>
+                        <button class="btn btn-primary" onclick="window.openModal('add-client-modal')">
+                            <i class="fas fa-user-plus"></i> New Client
+                        </button>
+                    </div>
+
+                    <div class="card" style="background: var(--bg-surface); padding: 24px; border-radius: 8px;">
+                        <div class="table-container" style="box-shadow: none; border:none; overflow-x:auto;">
+                            <table style="min-width: 800px;">
+                                <thead>
+                                    <tr>
+                                        <th>Name / Email</th>
+                                        <th>Physical Stats</th>
+                                        <th>Subscription</th>
+                                        <th>Dates</th>
+                                        <th>Stats (Weight)</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="clients-table-body">
+                                    <!-- Clients JS -->
+                                </tbody>
+                            </table>
+                            <div id="clients-empty" style="text-align: center; padding: 40px; display: none;">No clients
+                                added yet.</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION: ADMINS -->
+                <section id="admins" class="dashboard-section">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <h2>Admin Management</h2>
+                        <div id="add-admin-btn-container">
+                            <button class="btn btn-primary" onclick="window.openModal('add-admin-modal')">
+                                <i class="fas fa-user-plus"></i> New Admin
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card" style="background: var(--bg-surface); padding: 24px; border-radius: 8px;">
+                        <div class="table-container" style="box-shadow: none; border:none;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Password</th>
+                                        <th>Role</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admins-table-body">
+                                    <!-- Admins JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODALS -->
+
+    <!-- Add Client Modal -->
+    <div class="modal-overlay" id="add-client-modal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>Register New Client</h3>
+                <button class="close-modal" onclick="window.closeModal('add-client-modal')">&times;</button>
+            </div>
+            <form id="add-client-form">
+                <div class="form-row" style="display:flex; gap:15px;">
+                    <div class="form-group" style="flex:1;">
+                        <label>Full Name</label>
+                        <input type="text" id="client-name" class="form-control" required>
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Email</label>
+                        <input type="email" id="client-email" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="form-row" style="display:flex; gap:15px;">
+                    <div class="form-group" style="flex:1;">
+                        <label>Weight (kg)</label>
+                        <input type="number" id="client-weight" class="form-control" step="0.1" required>
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Height (cm)</label>
+                        <input type="number" id="client-height" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Subscription Price ($)</label>
+                    <input type="number" id="client-price" class="form-control" placeholder="0.00" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Start Date</label>
+                    <input type="date" id="client-start-date" class="form-control" required
+                        style="font-family: inherit;">
+                </div>
+
+                <div class="form-group">
+                    <label>Subscription Duration / Status</label>
+                    <div style="display:flex; gap:10px;">
+                        <select id="client-status-select" class="form-control" onchange="window.toggleCustomEnd(this)">
+                            <option value="active">Still Subscribing (Active)</option>
+                            <option value="1_month">1 Month</option>
+                            <option value="3_months">3 Months</option>
+                            <option value="6_months">6 Months</option>
+                            <option value="1_year">1 Year</option>
+                            <option value="custom">Custom End Date...</option>
+                        </select>
+                        <!-- Hidden Date for Custom -->
+                        <input type="date" id="client-end-date" class="form-control" style="display:none;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Weight Progress (kg lost/gained)</label>
+                    <input type="text" id="client-progress" class="form-control" placeholder="e.g. -5kg (Lost 5kg)">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Add Client</button>
+            </form>
+        </div>
+    </div>
+
+    </div>
+    </main>
+    </div>
+
+    <!-- MODALS -->
+
+    <!-- PIN Modal -->
+    <div class="modal-overlay" id="pin-modal" style="z-index: 2000;">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Security Check</h3>
+                <button class="close-modal" onclick="window.closeModal('pin-modal')">&times;</button>
+            </div>
+            <form id="pin-form">
+                <div class="form-group">
+                    <label>Enter Master PIN to access Settings</label>
+                    <input type="password" id="security-pin" class="form-control" placeholder="****" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Unlock Settings</button>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Upload Modal -->
+    <div class="modal-overlay" id="upload-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Upload Image</h3>
+                <button class="close-modal" onclick="window.closeModal('upload-modal')">&times;</button>
+            </div>
+            <form id="upload-form">
+                <div class="form-group">
+                    <label>Title / Client Name</label>
+                    <input type="text" id="img-title" class="form-control" required>
+                </div>
+
+                <div style="display:flex; gap:15px; margin-bottom:20px;">
+                    <div style="flex:1;">
+                        <label style="font-size:0.9rem;">Before Image</label>
+                        <div class="upload-zone" id="drop-zone-before" style="padding:20px; font-size:0.8rem;">
+                            <i class="fas fa-camera"></i> Select 'Before'
+                            <input type="file" id="file-input-before" accept="image/*" hidden>
+                        </div>
+                        <div id="preview-before"
+                            style="height:100px; background:#eee; border-radius:4px; display:none; background-size:cover;">
+                        </div>
+                    </div>
+                    <div style="flex:1;">
+                        <label style="font-size:0.9rem;">After Image</label>
+                        <div class="upload-zone" id="drop-zone-after" style="padding:20px; font-size:0.8rem;">
+                            <i class="fas fa-camera"></i> Select 'After'
+                            <input type="file" id="file-input-after" accept="image/*" hidden>
+                        </div>
+                        <div id="preview-after"
+                            style="height:100px; background:#eee; border-radius:4px; display:none; background-size:cover;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Description/Details</label>
+                    <textarea id="img-desc" class="form-control" rows="2"
+                        placeholder="Timeframe, key stats..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span class="btn-text">Upload Transformation <i class="fas fa-cloud-upload-alt"></i></span>
+                    <span class="btn-loader" style="display:none;"><i class="fas fa-spinner fa-spin"></i>
+                        Processing...</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Achievement Modal -->
+    <div class="modal-overlay" id="achievement-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Add Achievement</h3>
+                <button class="close-modal" onclick="window.closeModal('achievement-modal')">&times;</button>
+            </div>
+            <form id="achievement-form">
+                <div class="form-group">
+                    <label>Year</label>
+                    <input type="number" id="ach-year" class="form-control" placeholder="2024" required>
+                </div>
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="ach-title" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="ach-desc" class="form-control" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Save Achievement</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Member Modal -->
+    <div class="modal-overlay" id="member-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Add Community Member</h3>
+                <button class="close-modal" onclick="window.closeModal('member-modal')">&times;</button>
+            </div>
+            <form id="member-form">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="mem-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Transformation/Role</label>
+                    <input type="text" id="mem-role" class="form-control" placeholder="e.g. Weight Loss Success"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label>Weight Change (Optional)</label>
+                    <input type="text" id="mem-weight" class="form-control" placeholder="e.g. -20 lbs / +5 kg Muscle">
+                </div>
+                <div class="form-group">
+                    <label>Quote/Testimonial</label>
+                    <textarea id="mem-quote" class="form-control" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Save Member</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Admin Modal -->
+    <div class="modal-overlay" id="add-admin-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Register New Admin</h3>
+                <button class="close-modal" onclick="window.closeModal('add-admin-modal')">&times;</button>
+            </div>
+            <form id="add-admin-form">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="new-admin-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="new-admin-email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="text" id="new-admin-password" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="new-admin-role" class="form-control">
+                        <option value="admin">Regular Admin</option>
+                        <option value="owner">Master Admin (Boss)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Admin Modal Removed -->
+
+    <!-- Script v2.1 -->
+    <!-- Script v5.8 (Theme Fix) -->
+    <script src="assets/js/admin-script.js?v=5.8"></script>
+</body>
+
+</html>

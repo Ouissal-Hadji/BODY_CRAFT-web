@@ -1,0 +1,20 @@
+{
+  "name": "first_client",
+  "version": "1.0.0",
+  "description": "This is a single-page \"Landing Page\" website with a dark theme and cyan accents.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^2.2.2",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "multer": "^2.0.2",
+    "nodemailer": "^8.0.1"
+  }
+}

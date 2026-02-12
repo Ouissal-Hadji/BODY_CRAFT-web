@@ -1,0 +1,10 @@
+node_modules/
+.DS_Store
+uploads/
+data/*.json
+!data/admins.json
+.env
+# Windows image thumbnails
+Thumbs.db
+# Log files
+*.log

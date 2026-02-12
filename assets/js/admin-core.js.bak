@@ -1,0 +1,423 @@
+/* =========================================
+   ADMIN DASHBOARD CORE (v4.1 - Fix PIN)
+   ========================================= */
+
+// Configuration
+const CONFIG = {
+    authKey: 'admin_session_token',
+    userKey: 'admin_user_info',
+    api: 'http://localhost:3000/api'
+};
+
+// Security State
+let isSettingsUnlocked = false;
+
+/* =========================================
+   GLOBAL FUNCTIONS 
+   ========================================= */
+
+window.navToSection = function (sectionId) {
+    try {
+        console.log(`Navigating to: ${sectionId}`);
+        // SECURITY CHECK for 'admins' section
+        if (sectionId === 'admins' && !isSettingsUnlocked) {
+            console.log("Locked! Opening PIN modal.");
+            window.openModal('pin-modal');
+            return;
+        }
+
+        // Navigation UI Updates
+        document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+        document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
+
+        const link = document.querySelector(`.menu-item[data-target="${sectionId}"]`);
+        if (link) link.classList.add('active');
+
+        const sec = document.getElementById(sectionId);
+        if (sec) sec.classList.add('active');
+
+        const title = document.getElementById('current-page-title');
+        if (title) title.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+
+        if (sectionId === 'overview') updateStats();
+        if (sectionId === 'admins') renderAdmins();
+        if (sectionId === 'clients') renderClients();
+    } catch (e) { console.error("Nav Error:", e); }
+};
+
+/* =========================================
+   INITIALIZATION
+   ========================================= */
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        console.log("DOM Loaded. Initializing...");
+
+        // Theme
+        const savedTheme = localStorage.getItem('admin_theme_pref') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        const tBtn = document.getElementById('admin-theme-toggle');
+        if (tBtn) tBtn.innerHTML = savedTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+
+        // Check Auth using Token
+        const token = localStorage.getItem(CONFIG.authKey);
+
+        // If login page
+        if (document.getElementById('login-form')) {
+            if (token) window.location.href = 'admin-dashboard.html';
+            initLogin();
+            return;
+        }
+
+        // If dashboard page
+        if (!token) {
+            window.location.href = 'admin-login.html';
+            return;
+        }
+
+        initDashboard();
+
+    } catch (e) { console.error("Init Error:", e); }
+});
+
+/* =========================================
+   LOGIN & DASHBOARD LOGIC
+   ========================================= */
+
+function initLogin() {
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.onsubmit = async (e) => {
+            try {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                const res = await fetch(`${CONFIG.api}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.setItem(CONFIG.authKey, data.token);
+                    localStorage.setItem(CONFIG.userKey, JSON.stringify(data.user));
+                    window.location.href = 'admin-dashboard.html';
+                } else {
+                    alert(data.message || 'Invalid credentials.');
+                }
+            } catch (e) { console.error("Login Error:", e); }
+        };
+    }
+
+    // Toggle Password in Login
+    const toggle = document.getElementById('toggle-password');
+    if (toggle) {
+        toggle.onclick = function () {
+            const input = document.getElementById('password');
+            if (input) input.type = input.type === 'password' ? 'text' : 'password';
+        };
+    }
+}
+
+function initDashboard() {
+    console.log("Initializing Dashboard UI");
+
+    // Set User Info
+    const user = JSON.parse(localStorage.getItem(CONFIG.userKey) || '{}');
+    if (user.name) document.getElementById('current-user-name').textContent = user.name;
+    if (user.role) document.getElementById('current-user-role').textContent = user.role.toUpperCase();
+
+    // Initialize Data
+    renderGallery();
+    renderAchievements();
+    renderMembers();
+    updateStats();
+
+    // Mobile Menu
+    const toggle = document.getElementById('menu-toggle');
+    if (toggle) {
+        toggle.onclick = () => {
+            document.getElementById('sidebar').classList.toggle('active');
+        };
+    }
+
+    // --- FORM LISTENERS (CONSOLIDATED) ---
+
+    // 1. PIN Form
+    const pinForm = document.getElementById('pin-form');
+    if (pinForm) {
+        console.log("PIN Form found. Attaching listener.");
+        pinForm.onsubmit = (e) => {
+            e.preventDefault();
+            console.log("PIN Submit clicked.");
+            const pinVal = document.getElementById('security-pin').value;
+            if (pinVal === 'W1234') {
+                isSettingsUnlocked = true;
+                window.closeModal('pin-modal');
+                // Use setTimeout to ensure modal closes before nav
+                setTimeout(() => window.navToSection('admins'), 100);
+            } else {
+                alert('Incorrect PIN!');
+            }
+        };
+    } else {
+        console.error("PIN Form NOT found!");
+    }
+
+    // 2. Add Client Form
+    const clientForm = document.getElementById('add-client-form');
+    if (clientForm) {
+        clientForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const statusVal = document.getElementById('client-status-select').value;
+            let endDateDisplay = 'Active';
+
+            if (statusVal === 'active') endDateDisplay = 'Still Subscribing';
+            else if (statusVal === 'custom') endDateDisplay = document.getElementById('client-end-date').value || 'Unknown';
+            else endDateDisplay = statusVal.replace('_', ' ').toUpperCase();
+
+            const data = {
+                name: document.getElementById('client-name').value,
+                email: document.getElementById('client-email').value,
+                weight: document.getElementById('client-weight').value,
+                height: document.getElementById('client-height').value,
+                price: document.getElementById('client-price').value,
+                startDate: document.getElementById('client-start-date').value,
+                endDate: endDateDisplay,
+                progress: document.getElementById('client-progress').value
+            };
+
+            try {
+                const res = await fetch(`${CONFIG.api}/clients`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const json = await res.json();
+                if (json.success) {
+                    window.closeModal('add-client-modal');
+                    renderClients();
+                    alert('Client Added!');
+                } else {
+                    alert('Error adding client.');
+                }
+            } catch (err) { alert("Failed to connect to server."); }
+        };
+    }
+
+    // 3. Add Admin Form
+    const adminForm = document.getElementById('add-admin-form');
+    if (adminForm) {
+        adminForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('new-admin-name').value,
+                email: document.getElementById('new-admin-email').value,
+                password: document.getElementById('new-admin-password').value,
+                role: document.getElementById('new-admin-role').value
+            };
+            try {
+                const res = await fetch(`${CONFIG.api}/admins`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const json = await res.json();
+                if (json.success) {
+                    window.closeModal('add-admin-modal');
+                    renderAdmins();
+                    alert('Admin added!');
+                } else {
+                    alert(json.message);
+                }
+            } catch (err) { console.error(err); }
+        };
+    }
+
+    // 4. Edit Admin Form
+    const editForm = document.getElementById('edit-admin-form');
+    if (editForm) {
+        editForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-admin-id').value;
+            const data = {
+                name: document.getElementById('edit-admin-name').value,
+                email: document.getElementById('edit-admin-email').value,
+                password: document.getElementById('edit-admin-password').value,
+                role: document.getElementById('edit-admin-role').value
+            };
+
+            await fetch(`${CONFIG.api}/admins/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            window.closeModal('edit-admin-modal');
+            renderAdmins();
+            alert('Admin Updated!');
+        };
+    }
+}
+
+/* =========================================
+   RENDERERS & HELPERS
+   ========================================= */
+
+async function fetchStore(route) {
+    try {
+        const res = await fetch(`${CONFIG.api}/${route}?t=${Date.now()}`);
+        return await res.json();
+    } catch (e) { return []; }
+}
+
+async function renderAdmins() {
+    try {
+        const data = await fetchStore('admins');
+        const tbody = document.getElementById('admins-table-body');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+        const currentUser = JSON.parse(localStorage.getItem(CONFIG.userKey) || '{}');
+        const isOwner = (currentUser.role === 'owner');
+
+        if (!currentUser.role) {
+            window.logout();
+            return;
+        }
+
+        // --- DEBUG BUTTON ---
+        const section = document.getElementById('admins');
+        if (section && !document.getElementById('force-debug-btn')) {
+            const btn = document.createElement('button');
+            btn.id = 'force-debug-btn';
+            btn.className = 'btn btn-secondary';
+            btn.style.marginBottom = '10px';
+            btn.textContent = '🔍 DEBUG DATA (Click to check passwords)';
+            btn.onclick = () => {
+                alert('DEBUG DATA:\n' + JSON.stringify(data, null, 2));
+            };
+            section.querySelector('.card').prepend(btn);
+        }
+        // ---------------------
+
+        data.forEach(admin => {
+            const row = document.createElement('tr');
+            let actionButtons = ``;
+            if (isOwner) {
+                actionButtons += `
+                    <button class="btn btn-sm btn-secondary" onclick="window.openEditAdmin('${admin.id}')" style="margin-right:5px;"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-danger" onclick="window.deleteAdmin('${admin.id}')"><i class="fas fa-trash"></i></button>
+                 `;
+            } else {
+                actionButtons = `<span style="opacity:0.5;">Restricted</span>`;
+            }
+
+            let passwordDisplay = '****';
+            if (isOwner) {
+                const rawPass = (admin.password !== undefined && admin.password !== null) ? admin.password : "";
+                passwordDisplay = `
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span id="pass-display-${admin.id}" data-raw="${rawPass}" style="font-family:monospace; min-width:80px;">••••••••</span>
+                        <button class="btn btn-sm btn-secondary" onclick="window.toggleRowPass('${admin.id}', this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                 `;
+            }
+
+            row.innerHTML = `
+                <td><strong>${admin.name}</strong></td>
+                <td>${admin.email}</td>
+                <td>${passwordDisplay}</td>
+                <td><span style="background: #eef2ff; color: #4f46e5; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">${admin.role}</span></td>
+                <td>${actionButtons}</td>
+             `;
+            tbody.appendChild(row);
+        });
+    } catch (e) { console.error("Render Admins Error:", e); }
+}
+
+window.toggleRowPass = function (id, btn) {
+    const span = document.getElementById(`pass-display-${id}`);
+    const icon = btn.querySelector('i');
+    if (!span) return;
+    if (span.textContent === '••••••••') {
+        span.textContent = span.getAttribute('data-raw');
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        span.textContent = '••••••••';
+        icon.className = 'fas fa-eye';
+    }
+};
+
+window.openEditAdmin = async function (id) {
+    try {
+        const admins = await fetchStore('admins');
+        const admin = admins.find(a => a.id === id);
+        if (!admin) return;
+
+        document.getElementById('edit-admin-id').value = admin.id;
+        document.getElementById('edit-admin-name').value = admin.name;
+        document.getElementById('edit-admin-email').value = admin.email;
+        document.getElementById('edit-admin-password').value = (admin.password !== undefined) ? admin.password : '';
+        document.getElementById('edit-admin-role').value = admin.role;
+
+        window.openModal('edit-admin-modal');
+    } catch (e) { console.error(e); }
+};
+
+async function renderClients() {
+    const data = await fetchStore('clients');
+    const tbody = document.getElementById('clients-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    data.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${item.name}</td><td>${item.weight}kg</td><td>$${item.price}</td><td>${item.startDate}</td><td>${item.progress}</td><td><button class="btn btn-sm btn-danger" onclick="window.deleteClient('${item.id}')"><i class="fas fa-trash"></i></button></td>`;
+        tbody.appendChild(row);
+    });
+}
+
+// Misc Helpers
+window.openModal = function (id) {
+    const m = document.getElementById(id);
+    if (m) { m.classList.add('active'); m.style.display = 'flex'; }
+};
+window.closeModal = function (id) {
+    const m = document.getElementById(id);
+    if (m) { m.classList.remove('active'); m.style.display = ''; }
+};
+window.logout = function () {
+    localStorage.removeItem(CONFIG.authKey);
+    localStorage.removeItem(CONFIG.userKey);
+    window.location.href = 'admin-login.html';
+};
+window.toggleTheme = function () {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('admin_theme_pref', next);
+};
+window.deleteAdmin = async function (id) {
+    if (confirm("Delete Admin?")) {
+        await fetch(`${CONFIG.api}/admins/${id}`, { method: 'DELETE' });
+        renderAdmins();
+    }
+};
+window.toggleCustomEnd = function (select) {
+    const d = document.getElementById('client-end-date');
+    if (select.value === 'custom') d.style.display = 'block';
+    else d.style.display = 'none';
+};
+window.deleteClient = async function (id) {
+    if (confirm('Delete this client record?')) {
+        await fetch(`${CONFIG.api}/clients/${id}`, { method: 'DELETE' });
+        renderClients();
+    }
+};
+// Upload helpers stub
+window.resetPreview = function () { };
+window.setupSimpleFile = function () { };

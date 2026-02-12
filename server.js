@@ -8,6 +8,7 @@ const multer = require('multer');
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
+const sgMail = require('@sendgrid/mail');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -50,9 +51,6 @@ const upload = multer({
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
-/* =========================================
-   DATA HELPERS
-   ========================================= */
 /* =========================================
    DATA HELPERS
    ========================================= */
@@ -241,8 +239,7 @@ app.put('/api/admins/:id', (req, res) => {
             console.log(`[PUT /api/admins/${id}] Successfully updated.`);
             res.json({ success: true });
         } else {
-            console.error(`[PUT /api/admins/${id}] Write failed.`);
-            res.status(500).json({ success: false, message: 'Write failed' });
+            console.status(500).json({ success: false, message: 'Write failed' });
         }
     } catch (err) {
         console.error(`[PUT /api/admins/:id] CRITICAL ERROR:`, err);
@@ -265,6 +262,9 @@ app.delete('/api/admins/:id', (req, res) => {
 });
 
 // --- CONTACT / EMAIL ---
+// Configure SendGrid (More reliable for Render Free Tier)
+sgMail.setApiKey(process.env.SENDGRID_API_KEY || 'SG.placeholder');
+
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
@@ -278,56 +278,47 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Verify connection configuration
-transporter.verify(function (error, success) {
-    if (error) {
-        console.error('[CRITICAL] SMTP Connection Error:', error);
-    } else {
-        console.log("[SUCCESS] Server is ready to take our messages");
-    }
-});
-
 app.post('/api/contact', async (req, res) => {
     const { user_name, user_email, message } = req.body;
-
     console.log(`[CONTACT] Received message from ${user_name} (${user_email})`);
 
-    const mailOptions = {
-        from: 'ouissal.hadji123@gmail.com',
+    const msg = {
         to: 'ouissal.hadji123@gmail.com',
+        from: 'ouissal.hadji123@gmail.com', // MUST be a verified sender in SendGrid
+        replyTo: user_email,
         subject: `New Contact Message from ${user_name}`,
         text: `Name: ${user_name}\nEmail: ${user_email}\n\nMessage:\n${message}`,
-        replyTo: user_email
+        html: `<p><strong>Name:</strong> ${user_name}</p><p><strong>Email:</strong> ${user_email}</p><p><strong>Message:</strong></p><p>${message}</p>`
     };
 
     try {
-        console.log(`[ATTEMPT] Sending email to ouissal.hadji123@gmail.com...`);
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`[SUCCESS] Email sent: ${info.messageId}`);
-        console.log(`[SUCCESS] Response: ${info.response}`);
-        res.json({ success: true, message: 'Email sent successfully!' });
+        console.log(`[ATTEMPT] Sending email via SendGrid API...`);
+        await sgMail.send(msg);
+        console.log(`[SUCCESS] Email sent via SendGrid`);
+        res.json({ success: true, message: 'Message sent successfully!' });
     } catch (error) {
-        console.error('[CRITICAL] Gmail SMTP Error:', error);
+        console.error('[CRITICAL] SendGrid Error:', error.response ? error.response.body : error);
 
-        let errorMessage = `Failed to send email (Error: ${error.code || 'UNKNOWN'}).`;
-
-        if (error.code === 'EAUTH') {
-            errorMessage = 'Authentication Failed: Your Google App Password might be incorrect or expired.';
-        } else if (error.code === 'ESOCKET' || error.syscall === 'connect' || error.code === 'ETIMEDOUT') {
-            errorMessage = 'Connection Failed: The server timed out trying to reach Gmail. Port 587 might be restricted by Render.';
-        } else if (error.code === 'EENVELOPE') {
-            errorMessage = 'Email format error: Check if your email addresses are correct.';
+        // Fallback to Nodemailer for local development
+        if (process.env.NODE_ENV !== 'production') {
+            try {
+                console.log("[FALLBACK] Attempting SMTP Fallback...");
+                await transporter.sendMail({
+                    from: 'ouissal.hadji123@gmail.com',
+                    to: 'ouissal.hadji123@gmail.com',
+                    subject: `[LOCAL] Contact from ${user_name}`,
+                    text: message
+                });
+                return res.json({ success: true, message: 'Sent via SMTP Fallback' });
+            } catch (smtpErr) {
+                console.error("[SMTP FAIL] Fallback also failed.");
+            }
         }
 
         res.status(500).json({
             success: false,
-            message: errorMessage,
-            technical: {
-                code: error.code,
-                command: error.command,
-                responseCode: error.responseCode,
-                stack: error.stack ? 'See Server Logs' : 'N/A'
-            }
+            message: 'Email service currently unavailable. Please check SendGrid API Key.',
+            technical: error.code || 'API_ERROR'
         });
     }
 });

@@ -309,11 +309,14 @@ app.post('/api/contact', async (req, res) => {
     } catch (error) {
         console.error('[CRITICAL] Gmail SMTP Error:', error);
 
-        let errorMessage = 'Failed to send email.';
+        let errorMessage = `Failed to send email (Error: ${error.code || 'UNKNOWN'}).`;
+
         if (error.code === 'EAUTH') {
             errorMessage = 'Authentication Failed: Your Google App Password might be incorrect or expired.';
-        } else if (error.code === 'ESOCKET' || error.syscall === 'connect') {
-            errorMessage = 'Connection Failed: The server cannot reach Gmail. This might be a temporary network issue on Render.';
+        } else if (error.code === 'ESOCKET' || error.syscall === 'connect' || error.code === 'ETIMEDOUT') {
+            errorMessage = 'Connection Failed: The server timed out trying to reach Gmail. Port 587 might be restricted by Render.';
+        } else if (error.code === 'EENVELOPE') {
+            errorMessage = 'Email format error: Check if your email addresses are correct.';
         }
 
         res.status(500).json({
@@ -322,7 +325,8 @@ app.post('/api/contact', async (req, res) => {
             technical: {
                 code: error.code,
                 command: error.command,
-                responseCode: error.responseCode
+                responseCode: error.responseCode,
+                stack: error.stack ? 'See Server Logs' : 'N/A'
             }
         });
     }

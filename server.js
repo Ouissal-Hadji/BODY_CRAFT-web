@@ -263,7 +263,7 @@ app.delete('/api/admins/:id', (req, res) => {
 
 // --- CONTACT / EMAIL ---
 // Configure SendGrid (More reliable for Render Free Tier)
-sgMail.setApiKey(process.env.SENDGRID_API_KEY || 'SG.placeholder');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
@@ -271,7 +271,7 @@ const transporter = nodemailer.createTransport({
     secure: false, // Use STARTTLS
     auth: {
         user: 'ouissal.hadji123@gmail.com',
-        pass: process.env.GMAIL_PASS || 'uwskmnpgfnabhfml'
+        pass: process.env.GMAIL_PASS
     },
     tls: {
         rejectUnauthorized: false

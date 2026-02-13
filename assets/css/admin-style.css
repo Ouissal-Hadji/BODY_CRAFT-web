@@ -640,9 +640,25 @@ tr:last-child td {
 }
 
 /* Mobile Responsive */
+@media (max-width: 992px) {
+    .top-bar {
+        padding: 0 20px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
 @media (max-width: 768px) {
+    :root {
+        --sidebar-w: 0px;
+    }
+
     .sidebar {
         transform: translateX(-100%);
+        width: 280px;
+        box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
     }
 
     .sidebar.active {
@@ -654,6 +670,63 @@ tr:last-child td {
     }
 
     .menu-toggle {
-        display: block !important;
+        display: flex !important;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.2rem;
+    }
+
+    .breadcrumb {
+        display: none;
+    }
+
+    .top-actions {
+        gap: 8px;
+    }
+
+    #current-user-name,
+    #current-user-role {
+        font-size: 0.8rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        padding: 20px;
+    }
+
+    .page-content {
+        padding: 20px 15px;
+    }
+
+    /* Dimmer Overlay for when sidebar is open */
+    .sidebar.active::after {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 280px;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: -1;
+    }
+}
+
+@media (max-width: 480px) {
+    .top-actions #admin-theme-toggle {
+        display: none;
+    }
+
+    .top-bar {
+        height: 70px;
+    }
+
+    .user-profile {
+        padding: 15px;
     }
 }
